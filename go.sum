@@ -1,2 +1,7 @@
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
+github.com/google/uuid v1.2.0 h1:qJYtXnJRWmpe7m/3XlyhrsLrEURqHRM2kxzoxXqyUDs=
+github.com/google/uuid v1.2.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/kataras/muxie v1.1.1 h1:Dq5fgKBxmNznfM2MJjBr0JI7RLUvzvNLcjwA2btQwKs=
+github.com/kataras/muxie v1.1.1/go.mod h1:MoaVYoGmqvxzC10GFcPDV3xr6qenJ84ztcTxWQuNsYk=
+github.com/sdorunga1/feed-reader v0.0.0-20210131151502-5ef127144121 h1:B7j/JupJ3MXOegyLsOY43SdyTpJICP5OXeMGr7cBwzw=
