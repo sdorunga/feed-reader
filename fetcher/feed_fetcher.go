@@ -3,6 +3,7 @@ package fetcher
 import (
 	"encoding/xml"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -108,6 +109,7 @@ func (c *RFC1132Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 	d.DecodeElement(&v, &start)
 	parsedTime, err := time.Parse(time.RFC1123, v)
 	if err != nil {
+		log.Printf("Time %s in RSS feed is unparseable: %v", v, err)
 		return err
 	}
 
@@ -124,12 +126,14 @@ func (c *RFC1132Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 func (fetcher *FeedFetcher) Fetch(url string) (RSSFeed, error) {
 	xmlFeed, err := fetcher.client.Get(url)
 	if err != nil {
+		log.Printf("Got an error fetching the RSS feed for %s: %v", url, err)
 		return RSSFeed{}, ErrorNetworkError
 	}
 
 	rssDoc := rssDoc{}
 	err = xml.Unmarshal([]byte(xmlFeed), &rssDoc)
 	if err != nil {
+		log.Printf("XML feed was unparseable: %v", err)
 		return RSSFeed{}, ErrorUnparseableXML
 	}
 
