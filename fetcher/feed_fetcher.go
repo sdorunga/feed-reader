@@ -10,6 +10,15 @@ var (
 	// ErrorIncompatibleRSSVersion indicates the RSS feed version is different
 	// to 2.0.  The fetcher only supports RSS 2.0 for simplicty
 	ErrorIncompatibleRSSVersion = errors.New("Incompatible RSS version")
+	// ErrorRSSInvalidFormat is returned when the required fields for an RSS
+	// feed are not present.
+	ErrorRSSInvalidFormat = errors.New("Invalid RSS Format")
+	// ErrorNetworkError is returned whenever the underlying client fails to
+	// make a network request
+	ErrorNetworkError = errors.New("Client failed to fetch feed")
+	// ErrorUnparseableXML is returned when the XML feed is not correctly
+	// formatted and is unparseable by the GO XML parser.
+	ErrorUnparseableXML = errors.New("XML is not valid")
 )
 
 // FeedFetcher is responsible for downloading an RSS feed and parsing it into
@@ -26,6 +35,7 @@ type RSSFeed struct {
 	Title       string     `xml:"title"`
 	Description string     `xml:"description"`
 	ImageURL    string     `xml:"image>url"`
+	Link        string     `xml:"link"`
 	Items       []FeedItem `xml:"item"`
 }
 
@@ -44,6 +54,44 @@ type FeedItem struct {
 type rssDoc struct {
 	Version string  `xml:"version,attr"`
 	Channel RSSFeed `xml:"channel"`
+}
+
+func (doc *rssDoc) Validate() error {
+	// Note: I should be more flexible here in real life and actually parse the
+	// version and check for compatiblity. Given that RSS is a pretty fixed
+	// standard and has been on a stable version since 2009 and all the example
+	// feeds are on 2.0 this is fine for the exercise.
+	if doc.Version != "2.0" {
+		return ErrorIncompatibleRSSVersion
+	}
+
+	switch {
+	case doc.Channel.Title == "",
+		doc.Channel.Description == "",
+		doc.Channel.Link == "":
+		return ErrorRSSInvalidFormat
+	}
+
+	doc.CleanItems()
+
+	return nil
+}
+
+// Note: These fields are not srictly required by the RSS standard but
+// without them we can't meaningfully display the item in a feed
+// so instead of failing I just clear them away
+func (doc *rssDoc) CleanItems() {
+	cleanedItems := []FeedItem{}
+
+	for _, item := range doc.Channel.Items {
+		if item.Title != "" &&
+			item.Description != "" &&
+			item.Link != "" {
+			cleanedItems = append(cleanedItems, item)
+		}
+	}
+
+	doc.Channel.Items = cleanedItems
 }
 
 // RFC1132Time is a custom type so that we can have a custom decoder to
@@ -76,11 +124,16 @@ func (c *RFC1132Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 func (fetcher *FeedFetcher) Fetch(url string) (RSSFeed, error) {
 	xmlFeed, err := fetcher.client.Get(url)
 	if err != nil {
-		return RSSFeed{}, err
+		return RSSFeed{}, ErrorNetworkError
 	}
 
 	rssDoc := rssDoc{}
 	err = xml.Unmarshal([]byte(xmlFeed), &rssDoc)
+	if err != nil {
+		return RSSFeed{}, ErrorUnparseableXML
+	}
+
+	err = rssDoc.Validate()
 	if err != nil {
 		return RSSFeed{}, err
 	}

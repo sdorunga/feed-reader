@@ -1,6 +1,7 @@
 package fetcher
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -11,7 +12,7 @@ const (
 	bbcURL = "http://feeds.bbci.co.uk/news/uk/rss.xml"
 )
 
-func TestFetchFreshRSSFeed(t *testing.T) {
+func TestFetchRSSFeed(t *testing.T) {
 	client := clientWithStubResponse(GoodBBCResponse)
 	fetcher := FeedFetcher{client}
 
@@ -24,6 +25,7 @@ func TestFetchFreshRSSFeed(t *testing.T) {
 		Title:       "BBC News - Home",
 		Description: "BBC News - Home",
 		ImageURL:    "https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif",
+		Link:        "https://www.bbc.co.uk/news/",
 		Items: []FeedItem{
 			FeedItem{
 				Title:          "EU vaccine export row: Bloc backtracks on controls for NI",
@@ -43,7 +45,104 @@ func TestFetchFreshRSSFeed(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(rssFeed, expectedRSSFeed) {
-		t.Errorf("\nExpected:\n  %v.\nGot:\n  %v\n", expectedRSSFeed, rssFeed)
+		t.Fatalf("\nExpected:\n  %v.\nGot:\n  %v\n", expectedRSSFeed, rssFeed)
+	}
+}
+
+func TestFetchRSSFeedWithEmptyFieldsFiltersUselessItems(t *testing.T) {
+	client := clientWithStubResponse(MissingFieldsBBCResponse)
+	fetcher := FeedFetcher{client}
+
+	rssFeed, err := fetcher.Fetch(bbcURL)
+	if err != nil {
+		t.Fatal("Failed with error:", err)
+	}
+
+	expectedRSSFeed := RSSFeed{
+		Title:       "BBC News - Home",
+		Description: "BBC News - Home",
+		ImageURL:    "https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif",
+		Link:        "https://www.bbc.co.uk/news/",
+		Items: []FeedItem{
+			FeedItem{
+				Title:       "EU vaccine export row: Bloc backtracks on controls for NI",
+				Description: "It follows a decision to invoke an emergency provision in the Brexit deal in order to control vaccine exports.",
+				Link:        "https://www.bbc.co.uk/news/uk-55865539",
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(rssFeed, expectedRSSFeed) {
+		t.Fatalf("\nExpected:\n  %v.\nGot:\n  %v\n", expectedRSSFeed, rssFeed)
+	}
+}
+func TestFetchRSSFeedWithWrongVersion(t *testing.T) {
+	client := clientWithStubResponse(OldVersionBBCResponse)
+	fetcher := FeedFetcher{client}
+
+	_, err := fetcher.Fetch(bbcURL)
+	if err == nil {
+		t.Fatal("Expected to fail parsing because of a wrong RSS version")
+	}
+
+	if err != ErrorIncompatibleRSSVersion {
+		t.Fatalf("\nExpected to fail because of RSS version.\nInstead failed with:\n  %v\n", err)
+	}
+}
+
+func TestFetchRSSFeedWithMissingRequiredChannelField(t *testing.T) {
+	client := clientWithStubResponse(InvalidChannelBBCResponse)
+	fetcher := FeedFetcher{client}
+
+	_, err := fetcher.Fetch(bbcURL)
+	if err == nil {
+		t.Fatal("Expected to fail parsing because of missing required channel fields")
+	}
+
+	if err != ErrorRSSInvalidFormat {
+		t.Fatalf("\nExpected to fail because of missing required channel field.\nInstead failed with:\n  %v\n", err)
+	}
+}
+
+func TestFetchRSSFeedWithInvalidXML(t *testing.T) {
+	client := clientWithStubResponse(InvalidXMLBBCResponse)
+	fetcher := FeedFetcher{client}
+
+	_, err := fetcher.Fetch(bbcURL)
+	if err == nil {
+		t.Fatal("Expected to fail parsing because of invalid XML")
+	}
+
+	if err != ErrorUnparseableXML {
+		t.Fatalf("\nExpected to fail because of invalid XML.\nInstead failed with:\n  %v\n", err)
+	}
+}
+
+func TestFetchRSSFeedWithEmptyXML(t *testing.T) {
+	client := clientWithStubResponse(EmptyXMLBBCResponse)
+	fetcher := FeedFetcher{client}
+
+	_, err := fetcher.Fetch(bbcURL)
+	if err == nil {
+		t.Fatal("Expected to fail parsing because of empty XML")
+	}
+
+	if err != ErrorRSSInvalidFormat {
+		t.Fatalf("\nExpected to fail because of empty RSS.\nInstead failed with:\n  %v\n", err)
+	}
+}
+
+func TestFetchRSSFeedReturnsNetworkErrorWhenNetworkFails(t *testing.T) {
+	client := clientWithErrorResponse(errors.New("No connection"))
+	fetcher := FeedFetcher{client}
+
+	_, err := fetcher.Fetch(bbcURL)
+	if err == nil {
+		t.Fatal("Expected to fail because of network error")
+	}
+
+	if err != ErrorNetworkError {
+		t.Fatalf("\nExpected to fail because of network error.\nInstead failed with:\n  %v\n", err)
 	}
 }
 
