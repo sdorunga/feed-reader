@@ -15,23 +15,6 @@ import (
 	"strings"
 )
 
-type HttpError interface {
-	StatusCode() int
-	error
-}
-
-type NotFoundError struct {
-	err error
-}
-
-func (notFound NotFoundError) Error() string {
-	return notFound.err.Error()
-}
-
-func (notFound NotFoundError) StatusCode() int {
-	return http.StatusNotFound
-}
-
 func InitRouter(feedListStore feedlist.FeedListStore, feedFetcher fetcher.Fetcher) *muxie.Mux {
 	mux := muxie.NewMux()
 	//mux.PathCorrection = true
@@ -42,7 +25,8 @@ func InitRouter(feedListStore feedlist.FeedListStore, feedFetcher fetcher.Fetche
 	api.Handle("/feeds/:id", muxie.Methods().
 		HandleFunc(http.MethodGet, apiHandler(GETFeedHandler{store: feedListStore, fetcher: feedFetcher})))
 	api.Handle("/feeds", muxie.Methods().
-		HandleFunc(http.MethodGet, apiHandler(GETFeedListHandler{store: feedListStore})))
+		HandleFunc(http.MethodGet, apiHandler(GETFeedListHandler{store: feedListStore})).
+		HandleFunc(http.MethodPost, apiHandler(POSTFeedHandler{store: feedListStore, fetcher: feedFetcher})))
 
 	return mux
 }
