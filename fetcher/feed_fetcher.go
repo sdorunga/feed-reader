@@ -38,6 +38,7 @@ type RSSFeed struct {
 	ImageURL    string     `xml:"image>url"`
 	Link        string     `xml:"link"`
 	Items       []FeedItem `xml:"item"`
+	TTL         int        `xml:"ttl"`
 }
 
 // FeedItem is an individual news item.
@@ -45,7 +46,6 @@ type FeedItem struct {
 	Title          string      `xml:"title"`
 	Description    string      `xml:"description"`
 	Link           string      `xml:"link"`
-	TTL            int         `xml:"ttl"`
 	PublishingDate RFC1132Time `xml:"pubDate"`
 	GUID           string      `xml:"guid"`
 }
@@ -123,7 +123,7 @@ func (c *RFC1132Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 // This could use an XML Decoder to parse the stream from the feed as it comes
 // in. I built it this way because it makes the code more straightforward and
 // the performance benefits in this particular case are not significant.
-func (fetcher *FeedFetcher) Fetch(url string) (RSSFeed, error) {
+func (fetcher FeedFetcher) Fetch(url string) (RSSFeed, error) {
 	xmlFeed, err := fetcher.client.Get(url)
 	if err != nil {
 		log.Printf("Got an error fetching the RSS feed for %s: %v", url, err)

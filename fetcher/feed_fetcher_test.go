@@ -18,7 +18,7 @@ func TestFetchRSSFeed(t *testing.T) {
 
 	rssFeed, err := fetcher.Fetch(bbcURL)
 	if err != nil {
-		t.Error("Failed with error:", err)
+		t.Fatal("Failed with error:", err)
 	}
 
 	expectedRSSFeed := RSSFeed{
@@ -26,6 +26,7 @@ func TestFetchRSSFeed(t *testing.T) {
 		Description: "BBC News - Home",
 		ImageURL:    "https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif",
 		Link:        "https://www.bbc.co.uk/news/",
+		TTL:         15,
 		Items: []FeedItem{
 			FeedItem{
 				Title:          "EU vaccine export row: Bloc backtracks on controls for NI",
@@ -63,6 +64,7 @@ func TestFetchRSSFeedWithEmptyFieldsFiltersUselessItems(t *testing.T) {
 		Description: "BBC News - Home",
 		ImageURL:    "https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif",
 		Link:        "https://www.bbc.co.uk/news/",
+		TTL:         15,
 		Items: []FeedItem{
 			FeedItem{
 				Title:       "EU vaccine export row: Bloc backtracks on controls for NI",
@@ -156,4 +158,35 @@ func forceParseTime(timeString string) RFC1132Time {
 	}
 
 	return RFC1132Time{parsedTime}
+}
+
+type TestFetcher struct {
+	stubResponses map[string]RSSFeed
+	errors        map[string]error
+}
+
+var ErrorNoFeedResponseRegistered = errors.New("No registered feed for this url")
+
+func (fetcher TestFetcher) Fetch(url string) (RSSFeed, error) {
+	if fetcher.errors[url] != nil {
+		return RSSFeed{}, fetcher.errors[url]
+	}
+
+	if response, ok := fetcher.stubResponses[url]; ok {
+		return response, nil
+	}
+
+	return RSSFeed{}, ErrorNoResponseRegistered
+}
+
+func fetcherWithStubResponse(url string, stubResponse RSSFeed) TestFetcher {
+	return TestFetcher{map[string]RSSFeed{
+		url: stubResponse,
+	}, map[string]error{}}
+}
+
+func fetcherWithErrorResponse(url string, err error) TestFetcher {
+	return TestFetcher{map[string]RSSFeed{}, map[string]error{
+		url: err,
+	}}
 }
