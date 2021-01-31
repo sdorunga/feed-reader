@@ -3,8 +3,10 @@ package feedlist
 import (
 	"encoding/json"
 	"errors"
-	"github.com/boltdb/bolt"
 	"log"
+
+	"github.com/boltdb/bolt"
+	"github.com/google/uuid"
 )
 
 const (
@@ -18,22 +20,26 @@ var (
 	// simplicity
 	defaultFeedsList = []Feed{
 		Feed{
+			ID:          "b1031651-411c-40bb-b269-d247794dfd59",
 			Title:       "BBC News - UK",
 			Description: "BBC News - UK",
 			URL:         "http://feeds.bbci.co.uk/news/uk/rss.xml",
 		},
 		Feed{
+			ID:          "c2970c84-37c8-4ec1-8861-4b5a91ebff0d",
 			Title:       "BBC News - Technology",
 			Description: "BBC News - Technology",
 			URL:         "http://feeds.bbci.co.uk/news/technology/rss.xml",
 		},
 		Feed{
+			ID:          "28059396-5113-46ed-b76b-6d482a3bbcf3",
 			Title:       "UK News - The latest headlines from the UK | Sky News",
 			Description: "Expert comment and analysis on the latest UK news, with headlines from England, Scotland, Northern Ireland and Wales.",
 			URL:         "http://feeds.skynews.com/feeds/rss/uk.xml",
 			Category:    "Sky News",
 		},
 		Feed{
+			ID:          "a2370e4f-0e7f-4844-83cb-b54c02b0bf1f",
 			Title:       "Tech News - Latest Technology and Gadget News | Sky News",
 			Description: "Sky News technology provides you with all the latest tech and gadget news, game reviews, Internet and web news across the globe. Visit us today.",
 			URL:         "http://feeds.skynews.com/feeds/rss/technology.xml",
@@ -49,6 +55,9 @@ var (
 	// ErrorStoreFeedListCorrupted occurs if somehow we store an invalid
 	// JSON blob is stored in the db
 	ErrorStoreFeedListCorrupted = errors.New("Corrupted stored field list")
+	// ErrorStoreFeedListCorrupted occurs if somehow we store an invalid
+	// JSON blob is stored in the db
+	ErrorFeedNotFound = errors.New("Feed does not exist")
 )
 
 // FeedListStore is where we keep the available feeds that can be queried to
@@ -60,6 +69,7 @@ type FeedListStore struct {
 // The stored version of a Feed, only includes what we need for the listing
 // endpoint and for querying
 type Feed struct {
+	ID          string
 	Title       string
 	Description string
 	URL         string
@@ -122,23 +132,24 @@ func (store FeedListStore) ListAll() ([]Feed, error) {
 // simultaneously. I'm ignoring it as it is again the same solution as the
 // Cached Fetcher, it's also not usually an issue with conventional databases
 // as we could have some uniqueness constraint set up
-func (store FeedListStore) Add(feed Feed) error {
+func (store FeedListStore) Add(feed Feed) (string, error) {
+	feed.ID = uuid.NewString()
 	existingFeeds, err := store.ListAll()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	for _, existingFeed := range existingFeeds {
 		// Don't add an existing feed to the DB
 		if existingFeed.URL == feed.URL {
-			return nil
+			return existingFeed.ID, nil
 		}
 	}
 
 	rawFeed, err := json.Marshal(append(existingFeeds, feed))
 	if err != nil {
 		log.Printf("Error: Failed to marshal feed %v", feed)
-		return err
+		return "", err
 	}
 	err = store.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(feedListBucket))
@@ -151,10 +162,26 @@ func (store FeedListStore) Add(feed Feed) error {
 	})
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return feed.ID, nil
+}
+
+func (store FeedListStore) GetByID(ID string) (Feed, error) {
+	feeds, err := store.ListAll()
+	if err != nil {
+		return Feed{}, err
+	}
+
+	for _, feed := range feeds {
+		// Don't add an existing feed to the DB
+		if feed.ID == ID {
+			return feed, nil
+		}
+	}
+
+	return Feed{}, ErrorFeedNotFound
 }
 
 func (store FeedListStore) init() error {

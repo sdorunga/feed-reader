@@ -72,6 +72,33 @@ func TestAddingANewEntryAddsItToTheList(t *testing.T) {
 	}
 }
 
+func TestCanFetchEntryByID(t *testing.T) {
+	db := newTestDB()
+	list, err := NewFeedListStore(db)
+	if err != nil {
+		t.Fatal("Expected no error")
+	}
+
+	newFeed := Feed{
+		Title:       "New News",
+		Description: "The newest news out there",
+		URL:         "http://feed.newynews/news/uk/rss.xml",
+	}
+	newID, err := list.Add(newFeed)
+	if err != nil {
+		t.Fatal("Expected no error")
+	}
+
+	storedFeed, err := list.GetByID(newID)
+	if err != nil {
+		t.Fatal("Expected no error")
+	}
+
+	if storedFeed.URL != newFeed.URL {
+		t.Fatal("Expected new entry to be in the list")
+	}
+}
+
 func newTestDB() *bolt.DB {
 	tmpfile, err := ioutil.TempFile("", "test.db")
 	if err != nil {
