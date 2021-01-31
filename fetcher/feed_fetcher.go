@@ -22,6 +22,10 @@ var (
 	ErrorUnparseableXML = errors.New("XML is not valid")
 )
 
+func NewFeedFetcher() FeedFetcher {
+	return FeedFetcher{NewClient()}
+}
+
 // FeedFetcher is responsible for downloading an RSS feed and parsing it into
 // an internal representation.  It will only fetch feeds that are RSS 2.0
 // compatible.
