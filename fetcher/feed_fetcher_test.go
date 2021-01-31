@@ -13,7 +13,7 @@ const (
 )
 
 func TestFetchRSSFeed(t *testing.T) {
-	client := clientWithStubResponse(GoodBBCResponse)
+	client := clientWithStubResponse(bbcURL, GoodBBCResponse)
 	fetcher := FeedFetcher{client}
 
 	rssFeed, err := fetcher.Fetch(bbcURL)
@@ -50,7 +50,7 @@ func TestFetchRSSFeed(t *testing.T) {
 }
 
 func TestFetchRSSFeedWithEmptyFieldsFiltersUselessItems(t *testing.T) {
-	client := clientWithStubResponse(MissingFieldsBBCResponse)
+	client := clientWithStubResponse(bbcURL, MissingFieldsBBCResponse)
 	fetcher := FeedFetcher{client}
 
 	rssFeed, err := fetcher.Fetch(bbcURL)
@@ -77,7 +77,7 @@ func TestFetchRSSFeedWithEmptyFieldsFiltersUselessItems(t *testing.T) {
 	}
 }
 func TestFetchRSSFeedWithWrongVersion(t *testing.T) {
-	client := clientWithStubResponse(OldVersionBBCResponse)
+	client := clientWithStubResponse(bbcURL, OldVersionBBCResponse)
 	fetcher := FeedFetcher{client}
 
 	_, err := fetcher.Fetch(bbcURL)
@@ -91,7 +91,7 @@ func TestFetchRSSFeedWithWrongVersion(t *testing.T) {
 }
 
 func TestFetchRSSFeedWithMissingRequiredChannelField(t *testing.T) {
-	client := clientWithStubResponse(InvalidChannelBBCResponse)
+	client := clientWithStubResponse(bbcURL, InvalidChannelBBCResponse)
 	fetcher := FeedFetcher{client}
 
 	_, err := fetcher.Fetch(bbcURL)
@@ -105,7 +105,7 @@ func TestFetchRSSFeedWithMissingRequiredChannelField(t *testing.T) {
 }
 
 func TestFetchRSSFeedWithInvalidXML(t *testing.T) {
-	client := clientWithStubResponse(InvalidXMLBBCResponse)
+	client := clientWithStubResponse(bbcURL, InvalidXMLBBCResponse)
 	fetcher := FeedFetcher{client}
 
 	_, err := fetcher.Fetch(bbcURL)
@@ -119,7 +119,7 @@ func TestFetchRSSFeedWithInvalidXML(t *testing.T) {
 }
 
 func TestFetchRSSFeedWithEmptyXML(t *testing.T) {
-	client := clientWithStubResponse(EmptyXMLBBCResponse)
+	client := clientWithStubResponse(bbcURL, EmptyXMLBBCResponse)
 	fetcher := FeedFetcher{client}
 
 	_, err := fetcher.Fetch(bbcURL)
@@ -133,7 +133,7 @@ func TestFetchRSSFeedWithEmptyXML(t *testing.T) {
 }
 
 func TestFetchRSSFeedReturnsNetworkErrorWhenNetworkFails(t *testing.T) {
-	client := clientWithErrorResponse(errors.New("No connection"))
+	client := clientWithErrorResponse(bbcURL, errors.New("No connection"))
 	fetcher := FeedFetcher{client}
 
 	_, err := fetcher.Fetch(bbcURL)
