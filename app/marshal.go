@@ -48,10 +48,26 @@ func ToResponseFeeds(domainFeeds []feedlist.Feed) []Feed {
 	return result
 }
 
-func ToResponseRSSFeed(ID string, domainFeed fetcher.RSSFeed, category string) RSSFeed {
+// Note: normally the pagination would not be here and I would pass it through
+// to the source of the feed items.  In this case we always receive the full
+// feed so it doesn't provide the normal performance benefits.
+func ToResponseRSSFeed(ID string, domainFeed fetcher.RSSFeed, category string, perPage, offset int) RSSFeed {
 	items := domainFeed.Items
 	if category != "" {
 		items = domainFeed.ItemsByCategory(category)
+	}
+	if perPage != 0 {
+		start := offset
+		end := offset + perPage
+
+		if start > len(items) {
+			start = len(items)
+		}
+		if end > len(items) {
+			end = len(items)
+		}
+
+		items = items[start:end]
 	}
 	return RSSFeed{
 		ID:          ID,

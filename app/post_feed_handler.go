@@ -51,7 +51,12 @@ func (handler POSTFeedHandler) Handle(body []byte, params map[string]string, que
 		return nil, err
 	}
 
+	perPage, offset, err := getPaginationParams(queryParams)
+	if err != nil {
+		return nil, err
+	}
+
 	return GETFeedResponse{
-		Feed: ToResponseRSSFeed(feedID, rssFeed, ""),
+		Feed: ToResponseRSSFeed(feedID, rssFeed, "", perPage, offset),
 	}, nil
 }

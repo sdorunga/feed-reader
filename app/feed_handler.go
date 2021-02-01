@@ -30,7 +30,12 @@ func (handler GETFeedHandler) Handle(body []byte, params map[string]string, quer
 		return nil, err
 	}
 
+	perPage, offset, err := getPaginationParams(queryParams)
+	if err != nil {
+		return nil, err
+	}
+
 	return GETFeedResponse{
-		Feed: ToResponseRSSFeed(feed.ID, rssFeed, queryParams.Get("category")),
+		Feed: ToResponseRSSFeed(feed.ID, rssFeed, queryParams.Get("category"), perPage, offset),
 	}, nil
 }
