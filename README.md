@@ -26,30 +26,31 @@ Because this is a demo app I opted for BoltDB as an in-memory file backed store.
 
 # Example usage
 
+If you'd like to see the documentation outside the code you can run `godoc` in the root directory and navigate your browser to `http://localhost:6060/pkg/feed-reader/app/`, you can also check out the other packages there.
+
 The endpoints have more documentation for the expected request and response formats, but this is a quick list of things you can try on the API:
 
 ## Listing available feeds
 ```
-curl -v -H "Content-Type: application/json" "localhost:8080/api/feeds"
+curl -s -H "Content-Type: application/json" "localhost:8080/api/feeds"
 ```
 ## Reading an individual feed
 ```
-curl -v -H "Content-Type: application/json" "localhost:8080/api/feeds/b1031651-411c-40bb-b269-d247794dfd59"
+curl -s -H "Content-Type: application/json" "localhost:8080/api/feeds/b1031651-411c-40bb-b269-d247794dfd59"
 ```
 ## Reading an individual feed with pagination
 ```
-curl -v -H "Content-Type: application/json" "localhost:8080/api/feeds/b1031651-411c-40bb-b269-d247794dfd59?per_page=5&offset=0"
+curl -s -H "Content-Type: application/json" "localhost:8080/api/feeds/b1031651-411c-40bb-b269-d247794dfd59?per_page=5&offset=0"
 ```
 ## Reading an individual feed with category filtering
+In order to try this you need to first create the Guardian feed as none of the initial 4 feeds have categories. After you create that one you can use the ID from that one in this request
 ```
-curl -s -H "Content-Type: application/json" localhost:8080/api/feeds/3f58c0ec-88e5-49e0-b147-75f906ba135e?category=Culture
+curl -s -H "Content-Type: application/json" localhost:8080/api/feeds/<feed_ID>?category=Culture
 ```
 ## Adding a new feed
 ```
-curl -v -X POST -H "Content-Type: application/json" --data '{"url": "https://www.theguardian.com/uk/rss"}' "localhost:8080/api/feeds"
+curl -s -X POST -H "Content-Type: application/json" --data '{"url": "https://www.theguardian.com/uk/rss"}' "localhost:8080/api/feeds"
 ```
-
-If you'd like to see the documentation outside the code you can run `godoc` in the root directory and navigate your browser to `http://localhost:6060/pkg/feed-reader/app/`, you can also check out the other packages there
 
 # Design Choices
 - I chose not to use a testing framework because I wanted to keep the code as simple as possible and to not lean towards any particular testing style
