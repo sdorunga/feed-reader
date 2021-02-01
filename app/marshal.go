@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+//All the types in the marshaling file provide a mapping from the domain code
+//of the app to the JSON responses the client expects. This allows us to evolve
+//one side independent of the other
 type Feed struct {
 	ID          string `json:"id"`
 	Title       string `json:"title"`

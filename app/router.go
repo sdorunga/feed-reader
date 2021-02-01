@@ -99,6 +99,8 @@ func apiHandler(handler APIHandler) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
+// NotFoundHandler is the default handler for any rout that is not provided. It
+// returns a JSON formatted error
 type NotFoundHandler struct {
 }
 

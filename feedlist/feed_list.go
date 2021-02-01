@@ -24,12 +24,14 @@ var (
 			Title:       "BBC News - UK",
 			Description: "BBC News - UK",
 			URL:         "http://feeds.bbci.co.uk/news/uk/rss.xml",
+			ImageURL:    "https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif",
 		},
 		Feed{
 			ID:          "c2970c84-37c8-4ec1-8861-4b5a91ebff0d",
 			Title:       "BBC News - Technology",
 			Description: "BBC News - Technology",
 			URL:         "http://feeds.bbci.co.uk/news/technology/rss.xml",
+			ImageURL:    "https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif",
 		},
 		Feed{
 			ID:          "28059396-5113-46ed-b76b-6d482a3bbcf3",
@@ -37,6 +39,7 @@ var (
 			Description: "Expert comment and analysis on the latest UK news, with headlines from England, Scotland, Northern Ireland and Wales.",
 			URL:         "http://feeds.skynews.com/feeds/rss/uk.xml",
 			Category:    "Sky News",
+			ImageURL:    "http://feeds.skynews.com/images/web/logo/skynews_rss.png",
 		},
 		Feed{
 			ID:          "a2370e4f-0e7f-4844-83cb-b54c02b0bf1f",
@@ -44,6 +47,7 @@ var (
 			Description: "Sky News technology provides you with all the latest tech and gadget news, game reviews, Internet and web news across the globe. Visit us today.",
 			URL:         "http://feeds.skynews.com/feeds/rss/technology.xml",
 			Category:    "Sky News",
+			ImageURL:    "http://feeds.skynews.com/images/web/logo/skynews_rss.png",
 		},
 	}
 	// ErrorInitializingDB occurs only on startup when we are trying to get the
@@ -73,6 +77,7 @@ type Feed struct {
 	Title       string
 	Description string
 	URL         string
+	ImageURL    string
 	Category    string
 }
 
