@@ -22,7 +22,7 @@ type POSTFeedRequest struct {
 	URL string `json:"url"`
 }
 
-func (handler POSTFeedHandler) Handle(body []byte, params map[string]string) (interface{}, error) {
+func (handler POSTFeedHandler) Handle(body []byte, params map[string]string, queryParams url.Values) (interface{}, error) {
 	request := POSTFeedRequest{}
 	err := json.Unmarshal(body, &request)
 	if err != nil {
@@ -52,6 +52,6 @@ func (handler POSTFeedHandler) Handle(body []byte, params map[string]string) (in
 	}
 
 	return GETFeedResponse{
-		Feed: ToResponseRSSFeed(feedID, rssFeed),
+		Feed: ToResponseRSSFeed(feedID, rssFeed, ""),
 	}, nil
 }

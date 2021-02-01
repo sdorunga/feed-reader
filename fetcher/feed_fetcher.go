@@ -45,6 +45,24 @@ type RSSFeed struct {
 	TTL         int        `xml:"ttl"`
 }
 
+func (feed RSSFeed) ItemsByCategory(category string) []FeedItem {
+	items := []FeedItem{}
+	for _, item := range feed.Items {
+		matches := false
+		for _, itemCategory := range item.Categories {
+			if category == itemCategory {
+				matches = true
+				break
+			}
+		}
+		if matches {
+			items = append(items, item)
+		}
+	}
+
+	return items
+}
+
 // FeedItem is an individual news item.
 type FeedItem struct {
 	Title          string      `xml:"title"`
@@ -52,6 +70,7 @@ type FeedItem struct {
 	Link           string      `xml:"link"`
 	PublishingDate RFC1132Time `xml:"pubDate"`
 	GUID           string      `xml:"guid"`
+	Categories     []string    `xml:"category"`
 }
 
 // rssDoc is just a wrapper struct that we use to parse and validate the XML

@@ -3,6 +3,8 @@ package app
 import (
 	"feed-reader/feedlist"
 	"feed-reader/fetcher"
+
+	"net/url"
 )
 
 type GETFeedHandler struct {
@@ -14,7 +16,7 @@ type GETFeedResponse struct {
 	Feed RSSFeed `json:"feed"`
 }
 
-func (handler GETFeedHandler) Handle(body []byte, params map[string]string) (interface{}, error) {
+func (handler GETFeedHandler) Handle(body []byte, params map[string]string, queryParams url.Values) (interface{}, error) {
 	feed, err := handler.store.GetByID(params["id"])
 	if err != nil {
 		if err == feedlist.ErrorFeedNotFound {
@@ -29,6 +31,6 @@ func (handler GETFeedHandler) Handle(body []byte, params map[string]string) (int
 	}
 
 	return GETFeedResponse{
-		Feed: ToResponseRSSFeed(feed.ID, rssFeed),
+		Feed: ToResponseRSSFeed(feed.ID, rssFeed, queryParams.Get("category")),
 	}, nil
 }

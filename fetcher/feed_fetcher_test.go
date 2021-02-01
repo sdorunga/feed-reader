@@ -148,6 +148,56 @@ func TestFetchRSSFeedReturnsNetworkErrorWhenNetworkFails(t *testing.T) {
 	}
 }
 
+func TestRSSFeedItemsByCategory(t *testing.T) {
+	feed := RSSFeed{
+		Items: []FeedItem{
+			FeedItem{
+				Title: "First",
+				Categories: []string{
+					"UK",
+				},
+			},
+			FeedItem{
+				Title: "Second",
+				Categories: []string{
+					"Technology",
+				},
+			},
+			FeedItem{
+				Title: "Third",
+				Categories: []string{
+					"UK",
+					"Technology",
+				},
+			},
+			FeedItem{
+				Title:      "Fourth",
+				Categories: []string{},
+			},
+		},
+	}
+
+	filteredItems := feed.ItemsByCategory("Technology")
+	expectedItems := []FeedItem{
+		FeedItem{
+			Title: "Second",
+			Categories: []string{
+				"Technology",
+			},
+		},
+		FeedItem{
+			Title: "Third",
+			Categories: []string{
+				"UK",
+				"Technology",
+			},
+		},
+	}
+	if !reflect.DeepEqual(filteredItems, expectedItems) {
+		t.Fatalf("\nExpected to filter items by category to get: %v.\nInstead got:\n  %v\n", expectedItems, filteredItems)
+	}
+}
+
 // forceParseTime is a convenience method to allow us to ignore the possible
 // error cases. It should only be used to parse test time strings when they are
 // hardcoded and guaranteed to parse.

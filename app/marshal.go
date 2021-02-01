@@ -28,6 +28,7 @@ type Item struct {
 	Link           string     `json:"link"`
 	PublishingDate *time.Time `json:"pubDate,omitempty"`
 	GUID           string     `json:"guid"`
+	Categories     []string   `json:"categories"`
 }
 
 func ToResponseFeed(domainFeed feedlist.Feed) Feed {
@@ -47,14 +48,18 @@ func ToResponseFeeds(domainFeeds []feedlist.Feed) []Feed {
 	return result
 }
 
-func ToResponseRSSFeed(ID string, domainFeed fetcher.RSSFeed) RSSFeed {
+func ToResponseRSSFeed(ID string, domainFeed fetcher.RSSFeed, category string) RSSFeed {
+	items := domainFeed.Items
+	if category != "" {
+		items = domainFeed.ItemsByCategory(category)
+	}
 	return RSSFeed{
 		ID:          ID,
 		Title:       domainFeed.Title,
 		Link:        domainFeed.Link,
 		Description: domainFeed.Description,
 		ImageURL:    domainFeed.ImageURL,
-		Items:       ToResponseRSSItems(domainFeed.Items),
+		Items:       ToResponseRSSItems(items),
 	}
 }
 
@@ -71,6 +76,7 @@ func ToResponseRSSItem(domainItem fetcher.FeedItem) Item {
 		Title:       domainItem.Title,
 		Description: domainItem.Description,
 		Link:        domainItem.Link,
+		Categories:  domainItem.Categories,
 	}
 	if item.PublishingDate != (&time.Time{}) {
 		item.PublishingDate = &domainItem.PublishingDate.Time

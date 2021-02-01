@@ -55,7 +55,7 @@ var (
 	// ErrorStoreFeedListCorrupted occurs if somehow we store an invalid
 	// JSON blob is stored in the db
 	ErrorStoreFeedListCorrupted = errors.New("Corrupted stored field list")
-	// ErrorStoreFeedListCorrupted occurs if somehow we store an invalid
+	// ErrorFeedNotFound occurs if somehow we store an invalid
 	// JSON blob is stored in the db
 	ErrorFeedNotFound = errors.New("Feed does not exist")
 )
@@ -66,7 +66,7 @@ type FeedListStore struct {
 	db *bolt.DB
 }
 
-// The stored version of a Feed, only includes what we need for the listing
+// Feed The stored version of a Feed, only includes what we need for the listing
 // endpoint and for querying
 type Feed struct {
 	ID          string
@@ -168,6 +168,7 @@ func (store FeedListStore) Add(feed Feed) (string, error) {
 	return feed.ID, nil
 }
 
+// GetByID returns one stored feed by the matching ID field
 func (store FeedListStore) GetByID(ID string) (Feed, error) {
 	feeds, err := store.ListAll()
 	if err != nil {

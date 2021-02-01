@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -54,7 +55,7 @@ func apiMiddleware(next http.Handler) http.Handler {
 }
 
 type APIHandler interface {
-	Handle(body []byte, params map[string]string) (interface{}, error)
+	Handle(body []byte, params map[string]string, queryParams url.Values) (interface{}, error)
 }
 
 func apiHandler(handler APIHandler) func(http.ResponseWriter, *http.Request) {
@@ -64,11 +65,18 @@ func apiHandler(handler APIHandler) func(http.ResponseWriter, *http.Request) {
 			fmt.Fprintf(w, jsonError(err))
 		}
 		defer r.Body.Close()
+		// Build up the path params from muxie
 		params := map[string]string{}
 		for _, keyPair := range muxie.GetParams(w) {
 			params[keyPair.Key] = keyPair.Value
 		}
-		rsp, err := handler.Handle(b, params)
+		// Get query and request body params populated
+		err = r.ParseForm()
+		if err != nil {
+			fmt.Fprintf(w, jsonError(err))
+		}
+
+		rsp, err := handler.Handle(b, params, r.Form)
 		if err != nil {
 			// If we specifically return an HttpError we can use its code,
 			// otherwise we just default to Internal Server Error
@@ -82,7 +90,7 @@ func apiHandler(handler APIHandler) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		jsonRsp, err := json.Marshal(rsp)
+		jsonRsp, err := json.MarshalIndent(rsp, "", "\t")
 		if err != nil {
 			fmt.Fprintf(w, jsonError(err))
 			return
@@ -95,7 +103,7 @@ func apiHandler(handler APIHandler) func(http.ResponseWriter, *http.Request) {
 type NotFoundHandler struct {
 }
 
-func (handler NotFoundHandler) Handle(body []byte, params map[string]string) (interface{}, error) {
+func (handler NotFoundHandler) Handle(body []byte, params map[string]string, queryParams url.Values) (interface{}, error) {
 	return nil, NotFoundError{err: errors.New("Endpoint not found")}
 }
 
