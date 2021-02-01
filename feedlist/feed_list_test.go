@@ -70,6 +70,10 @@ func TestAddingANewEntryAddsItToTheList(t *testing.T) {
 	if !found {
 		t.Fatal("Expected new entry to be in the list")
 	}
+
+	if len(feedList) != len(defaultFeedsList)+1 {
+		t.Fatal("Expected only one new entry to be added but added ", len(feedList)-len(defaultFeedsList))
+	}
 }
 
 func TestCanFetchEntryByID(t *testing.T) {

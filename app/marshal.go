@@ -27,8 +27,8 @@ type Item struct {
 	Description    string     `json:"description"`
 	Link           string     `json:"link"`
 	PublishingDate *time.Time `json:"pubDate,omitempty"`
-	GUID           string     `json:"guid"`
-	Categories     []string   `json:"categories"`
+	GUID           string     `json:"guid,omitempty"`
+	Categories     []string   `json:"categories,omitempty"`
 }
 
 func ToResponseFeed(domainFeed feedlist.Feed) Feed {

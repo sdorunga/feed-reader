@@ -18,7 +18,6 @@ import (
 
 func InitRouter(feedListStore feedlist.FeedListStore, feedFetcher fetcher.Fetcher) *muxie.Mux {
 	mux := muxie.NewMux()
-	//mux.PathCorrection = true
 
 	api := mux.Of("/api")
 	api.Use(apiMiddleware)

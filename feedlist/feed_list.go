@@ -15,9 +15,9 @@ const (
 )
 
 var (
-	// Note: I'm using the URL as an id for identifying the feed, we could
-	// normally just use a DB ID or I could generate one but I skipped this for
-	// simplicity
+	// Note: I only included this to make the app easier to demo, in the
+	// real version this would just not be here and we'd have to set up
+	// every entry with a call to the POST /feeed handler
 	defaultFeedsList = []Feed{
 		Feed{
 			ID:          "b1031651-411c-40bb-b269-d247794dfd59",
@@ -96,6 +96,19 @@ func NewFeedListStore(db *bolt.DB) (FeedListStore, error) {
 // ListAll returns a list of all the Feeds that have been stored, including a
 // hardcoded list for demo purposes
 func (store FeedListStore) ListAll() ([]Feed, error) {
+	storedFeedList, err := store.listStored()
+	if err != nil {
+		return []Feed{}, err
+	}
+
+	if storedFeedList == nil {
+		return defaultFeedsList, nil
+	}
+
+	return append(defaultFeedsList, storedFeedList...), nil
+}
+
+func (store FeedListStore) listStored() ([]Feed, error) {
 	rawFeedList := []byte{}
 	err := store.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(feedListBucket))
@@ -111,17 +124,18 @@ func (store FeedListStore) ListAll() ([]Feed, error) {
 		return []Feed{}, err
 	}
 
-	if rawFeedList == nil {
-		return defaultFeedsList, nil
+	if len(rawFeedList) == 0 {
+		return []Feed{}, nil
 	}
 
 	feedList := []Feed{}
 	err = json.Unmarshal(rawFeedList, &feedList)
 	if err != nil {
 		log.Printf("Error: can't unmarshal feed %v", rawFeedList)
-		return defaultFeedsList, ErrorStoreFeedListCorrupted
+		return []Feed{}, ErrorStoreFeedListCorrupted
 	}
-	return append(defaultFeedsList, feedList...), nil
+
+	return feedList, nil
 }
 
 // Add inserts a new Feed into the list, it also ensures we don't add a feed
@@ -134,12 +148,21 @@ func (store FeedListStore) ListAll() ([]Feed, error) {
 // as we could have some uniqueness constraint set up
 func (store FeedListStore) Add(feed Feed) (string, error) {
 	feed.ID = uuid.NewString()
-	existingFeeds, err := store.ListAll()
+	existingFeeds, err := store.listStored()
 	if err != nil {
 		return "", err
 	}
 
 	for _, existingFeed := range existingFeeds {
+		// Don't add an existing feed to the DB
+		if existingFeed.URL == feed.URL {
+			return existingFeed.ID, nil
+		}
+	}
+
+	// Note: this wouldn't be needed in the final version as everything would
+	// be DB driven so we'd only range over the actual stored Feeds
+	for _, existingFeed := range defaultFeedsList {
 		// Don't add an existing feed to the DB
 		if existingFeed.URL == feed.URL {
 			return existingFeed.ID, nil
