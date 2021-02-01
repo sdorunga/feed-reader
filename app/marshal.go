@@ -96,6 +96,7 @@ func ToResponseRSSItem(domainItem fetcher.FeedItem) Item {
 		Description: domainItem.Description,
 		Link:        domainItem.Link,
 		Categories:  domainItem.Categories,
+		GUID:        domainItem.GUID,
 	}
 	if item.PublishingDate != (&time.Time{}) {
 		item.PublishingDate = &domainItem.PublishingDate.Time
